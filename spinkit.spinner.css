@@ -1,0 +1,61 @@
+.spinKit.sk-folding-cube .sk-cube:before,
+.spinKit.sk-fading-circle .sk-circle:before,
+.spinKit.sk-rotating-plane,
+.spinKit.sk-double-bounce .sk-child,
+.spinKit.sk-wave .sk-rect,
+.spinKit.sk-wandering-cubes .sk-cube,
+.spinKit.sk-spinner-pulse,
+.spinKit.sk-chasing-dots .sk-child,
+.spinKit.sk-three-bounce .sk-child,
+.spinKit.sk-circle .sk-child:before,
+.spinKit.sk-cube-grid .sk-cube{
+  background-color: white;
+}
+
+.spinKit.sk-wave .sk-rect {
+  margin-right: 3px;
+}
+
+.spinKit.sk-spinner-pulse {
+    width: 60px;
+    height: 60px;
+    margin: 60px auto;
+}
+
+.spinKit.sk-wandering-cubes .sk-cube {
+  width: 20px;
+  height: 20px;
+}
+
+.spinKit-overlay.element{
+  position: absolute;
+}
+
+.spinKit.element{
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: 0;
+  left: 0;
+  bottom: 60px;
+  right: 0;
+  margin: auto;
+}
+
+.u-Processing{
+  display:none !important;
+}
+
+.spinKit{
+  position: fixed;
+}
+
+.spinKit-overlay{
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  z-index: 99;
+  background-color: rgba(49, 49, 49, 0.61);
+}
