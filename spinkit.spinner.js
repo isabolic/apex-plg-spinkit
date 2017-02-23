@@ -16,7 +16,8 @@
         parent: "body",
         overlay: true,
         autoShow: false,
-        delayHide: 1000
+        delayHide: 1000,
+        listenToApexRegEvents: true
     }
 
     var type = {
@@ -131,7 +132,7 @@
      */
     var triggerEvent = function triggerEvent(evt, evtData) {
         xDebug.call(this, arguments.callee.name, arguments);
-        this.options.$eleBtn.trigger(evt, [evtData]);
+        this.container.trigger(evt, [evtData]);
         $(this).trigger(evt + "." + this.apexname, [evtData]);
     };
 
@@ -172,6 +173,27 @@
                .find(".spinKit")
                .addClass("element");
         }
+        this.isRendered = true;
+    }
+
+    /**
+     * [intervalFlag call passed function repeatedly "fnIntervat", stop only when flagForClear is set to true ]
+     * @param  {[type]} fnIntervat   [function for repeatedly call]
+     * @param  {[type]} flagForClear [key prop. on this scope]
+     * @param  {[type]} timer        [timer, def. 200]
+     */
+    var intervalFlag = function (fnIntervat, flagForClear, timer){
+      var interval;
+
+      xDebug.call(this, arguments.callee.name, arguments);
+
+      interval = setInterval(function(){
+                    fnIntervat.call(this);
+
+                    if (this[flagForClear]){
+                      clearInterval(interval);
+                    }
+                  }.bind(this), (timer || 200));
     }
 
     applyOverlay = function applyOverlay(){
@@ -196,12 +218,18 @@
     setUp = function setUp(){
         xDebug.call(this, arguments.callee.name, arguments);
 
-        this.container = $("#" + this.options.parent);
+        this.options.parent = $(this.options.parent);
 
         if ( browserSupportsCSSProperty.call(this, "animation") === false ) {
             console.warn("this browser doesn't support css animation");
             return;
         }
+
+        this.container = $("<div>",{"class":"spinKit-container"});
+
+        this.options
+            .parent
+            .append(this.container);
 
         this.type = type[this.options.spinnerClass];
 
@@ -232,16 +260,28 @@
 
         setPosition.call(this);
 
-        this.container.data("spinKit", this);
+        // reg. resize event
+        $(window).resize(function(){
+
+              this.isRendered = false;
+
+              intervalFlag.call(
+                  this, setPosition, "isRendered", 500
+              );
+
+        }.bind(this));
+
+        this.options.parent.data("spinKit", this);
     }
 
     apex.plugins.spinKit = function (opts){
-        this.options = {};
-        this.container = null;
-        this.spinner = null;
-        this.overlay = null;
-        this.type    = {};
-
+        this.options     = {};
+        this.parent      = null;
+        this.spinner     = null;
+        this.overlay     = null;
+        this.isRendered  = false;
+        this.type        = {};
+        this.$container  =  null;
         this.init = function(){
 
             xDebug.call(this, arguments.callee.name, arguments);
@@ -254,8 +294,10 @@
 
             setUp.call(this);
 
-            this.container.on("apexbeforerefresh", this.hideShow.bind(this, true ));
-            this.container.on("apexafterrefresh", this.hideShow.bind(this , false));
+            if (this.options.listenToApexRegEvents === true){
+               this.options.parent.on("apexbeforerefresh", this.hideShow.bind(this, true ));
+               this.options.parent.on("apexafterrefresh",  this.hideShow.bind(this, false));
+            }
 
             return this;
         }
@@ -264,11 +306,17 @@
     }
 
     apex.plugins.spinKit.prototype = {
-       hideShow: function hideShow (show){
+       hideShow: function hideShow (show, autoHideTimer){
+          var el = this.overlay || this.container.find(".spinKit");
+
           if (show === true){
-            this.overlay.show();
+            el.show();
           } else {
-            this.overlay.delay(this.options.delayHide).hide(0);
+            el.delay(this.options.delayHide).hide(0);
+          }
+
+          if($.isNumeric(autoHideTimer) === true){
+            el.delay(autoHideTimer).hide(0);
           }
        },
 
@@ -283,11 +331,10 @@
        },
 
        destoy: function destoy(){
-          this.container.find(".spinKit-overlay").remove();
-          this.container.find(".spinKit").remove();
-          this.container.off("apexbeforerefresh", this.hideShow.bind(this, true ));
-          this.container.off("apexafterrefresh", this.hideShow.bind(this , false));
-          $.removeData(this.container, "spinKit");
+          this.container.remove();
+          this.options.parent.off("apexbeforerefresh", this.hideShow.bind(this, true ));
+          this.options.parent.off("apexafterrefresh" , this.hideShow.bind(this, false));
+          $.removeData(this.options.parent, "spinKit");
           delete this;
        }
     };
