@@ -136,6 +136,11 @@
         $(this).trigger(evt + "." + this.apexname, [evtData]);
     };
 
+    /**
+     * [browserSupportsCSSProperty - PRIVATE check if browser supports css property, etc animation]
+     * @param  {String}            - propertyName
+     * @return {Boolean}           - [true/false]
+     */
     var  browserSupportsCSSProperty = function browserSupportsCSSProperty(propertyName) {
         xDebug.call(this, arguments.callee.name, arguments);
         var elm = document.createElement('div');
@@ -157,6 +162,9 @@
         return false;
     }
 
+    /**
+     * [setPosition - PRIVATE set position of spinner]
+     */
     setPosition = function setPosition(){
         xDebug.call(this, arguments.callee.name, arguments);
 
@@ -196,6 +204,10 @@
                   }.bind(this), (timer || 200));
     }
 
+    /**
+     * [applyOverlay PRIVATE  apply overlay]
+     * @return {Jquery} [$ overlay element]
+     */
     applyOverlay = function applyOverlay(){
       var overlay = $("<div>",{"class":"spinKit-overlay"});
 
@@ -215,10 +227,17 @@
       return overlay;
     }
 
+    /**
+     * [setUp - PRIVATE inital setup, create container element, set overlay etc..]
+     */
     setUp = function setUp(){
+        var data;
+
         xDebug.call(this, arguments.callee.name, arguments);
 
+
         this.options.parent = $(this.options.parent);
+        data = this.options.parent.data("spinKit");
 
         if ( browserSupportsCSSProperty.call(this, "animation") === false ) {
             console.warn("this browser doesn't support css animation");
@@ -271,7 +290,13 @@
 
         }.bind(this));
 
-        this.options.parent.data("spinKit", this);
+        if ($.isArray(data) === false) {
+            data = this;
+        } else {
+            data.push(this);
+        }
+
+        this.options.parent.data("spinKit", data);
     }
 
     apex.plugins.spinKit = function (opts){
@@ -306,40 +331,88 @@
     }
 
     apex.plugins.spinKit.prototype = {
-       hideShow: function hideShow (show, autoHideTimer){
+
+      /**
+       * [hideShow PUBLIC  - hide/show spinner]
+       * @param  {Boolean}  show          [show/hide spinner]
+       * @param  {Intiger}  autoHideTimer [if show param is true and "autoHideTimer" is passed, the spinner will disappear after that timer expires]
+       * @param  {function} callback      [callback function, used for apex "Wait For Result" property]
+       */
+       hideShow: function hideShow (show, autoHideTimer, callback){
           var el = this.overlay || this.container.find(".spinKit");
+          var cb = function (){ apex.da.resume( callback, false ); } || function(){};
 
           if (show === true){
             el.show();
-          } else {
-            el.delay(this.options.delayHide).hide(0);
-          }
 
-          if($.isNumeric(autoHideTimer) === true){
-            el.delay(autoHideTimer).hide(0);
+            if ($.isNumeric(autoHideTimer) === true) {
+              el.delay(autoHideTimer).hide(0, cb);
+            }
+
+          } else {
+            el.delay(this.options.delayHide).hide(0, cb);
           }
        },
 
+      /**
+       * [changeType PUBLIC - change spinner type on the fly]
+       * @param  {String}  spinnerClass  [spinner_type, use constants apex.plugins.spinKit.spinner_type]
+       */
        changeType : function (spinnerClass){
           var defType = type[spinnerClass];
 
           if (defType !== undefined){
               this.options.spinnerClass = spinnerClass;
-              this.container.find(".spinKit").remove()
+              this.container.find(".spinKit").remove();
               setUp.call(this);
           }
        },
 
+       /**
+        * [destoy PUBLIC - remove DOM elements, unregister events, remove data from DOM element]
+        */
        destoy: function destoy(){
-          this.container.remove();
-          this.options.parent.off("apexbeforerefresh", this.hideShow.bind(this, true ));
-          this.options.parent.off("apexafterrefresh" , this.hideShow.bind(this, false));
+          var data = this.options.parent.data("spinKit");
+
+
+
+          if (this.options.listenToApexRegEvents === true){
+            this.options.parent.off("apexbeforerefresh", this.hideShow.bind(this, true ));
+            this.options.parent.off("apexafterrefresh" , this.hideShow.bind(this, false));
+          }
+
+          if ($.isArray(data) === false) {
+            $.removeData(this.options.parent, "spinKit");
+          } else {
+            $.grep(data, function(d){
+                return !d.container.is(this.container);
+            }.bind(this));
+          }
+
           $.removeData(this.options.parent, "spinKit");
+          this.container.remove();
+
           delete this;
        }
     };
 
-})(apex.jQuery, apex);
+    /**
+     * [spinner_type constants spinner_type]
+     */
+    apex.plugins.spinKit.spinner_type = {
+      SK_ROTATING_PLANE  : "sk-rotating-plane",
+      SK_FADING_CIRCLE   : "sk-fading-circle",
+      SK_FOLDING_CUBE    : "sk-folding-cube",
+      SK_DOUBLE_BOUNCE   : "sk-double-bounce",
+      SK_WAVE            : "sk-wave",
+      SK_WANDERING_CUBES : "sk-wandering-cubes",
+      SK_SPINNER_PULSE   : "sk-spinner-pulse",
+      SK_CHASING_DOTS    : "sk-chasing-dots",
+      SK_THREE_BOUNCE    : "sk-three-bounce",
+      SK_CIRCLE          : "sk-circle",
+      SK_CUBE_GRID       : "sk-cube-grid"
+    }
 
+})(apex.jQuery, apex);
 
 
