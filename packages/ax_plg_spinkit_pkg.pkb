@@ -94,7 +94,8 @@
           v_listen_apx_rg_ev := 'true';
        end if;
 
-       v_exe_code := ' new apex.plugins.spinKit({'                  ||
+       v_exe_code := ' new apex.plugins.spinKit({'                   ||
+            'dynamicActionId       :"'  || p_dynamic_action.id       || '",' ||
             'parent                :"'  || v_aff_element             || '",' ||
             'spinnerClass          :"'  || v_spinner_class           || '",' ||
             'overlay               : '  || v_show_over_boo           || ','  ||
@@ -105,7 +106,7 @@
 
        if v_is_region = 'N' then
           v_result.javascript_function :=
-             'function (){ $("'|| v_aff_element ||'").data("spinKit").hideShow(true, ' || nvl(v_delay_hide_ms, 0 ) ||', this.resumeCallback);}';
+             'function (){ $("'|| v_aff_element ||'").data("' || p_dynamic_action.id ||'").hideShow(true, ' || nvl(v_delay_hide_ms, 0 ) ||', this.resumeCallback);}';
        else
           v_result.javascript_function := 'null';
        end if;
