@@ -13,3 +13,4 @@ install instruction :
 
 
 
+![](https://raw.githubusercontent.com/isabolic/apex-plg-spinkit/master/apx_plg_spinkit.gif)
