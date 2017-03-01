@@ -11,8 +11,29 @@
 }());
 
 (function($, x) {
+
+    /**
+     * [spinner_type constants spinner_type]
+     */
+    apex.plugins.spinKit  = {};
+
+    apex.plugins.spinKit.spinner_type = {
+      SK_ROTATING_PLANE  : "sk-rotating-plane",
+      SK_FADING_CIRCLE   : "sk-fading-circle",
+      SK_FOLDING_CUBE    : "sk-folding-cube",
+      SK_DOUBLE_BOUNCE   : "sk-double-bounce",
+      SK_WAVE            : "sk-wave",
+      SK_WANDERING_CUBES : "sk-wandering-cubes",
+      SK_SPINNER_PULSE   : "sk-spinner-pulse",
+      SK_CHASING_DOTS    : "sk-chasing-dots",
+      SK_THREE_BOUNCE    : "sk-three-bounce",
+      SK_CIRCLE          : "sk-circle",
+      SK_CUBE_GRID       : "sk-cube-grid"
+    }
+
     var options = {
-        spinnerClass : "sk-rotating-plane",
+        dynamicActionId : null,
+        spinnerClass : apex.plugins.spinKit.spinner_type.SK_ROTATING_PLANE,
         parent: "body",
         overlay: true,
         autoShow: false,
@@ -185,7 +206,7 @@
     }
 
     /**
-     * [intervalFlag call passed function repeatedly "fnIntervat", stop only when flagForClear is set to true ]
+     * [intervalFlag - PRIVATE call passed function repeatedly "fnIntervat", stop only when flagForClear is set to true ]
      * @param  {[type]} fnIntervat   [function for repeatedly call]
      * @param  {[type]} flagForClear [key prop. on this scope]
      * @param  {[type]} timer        [timer, def. 200]
@@ -195,17 +216,18 @@
 
       xDebug.call(this, arguments.callee.name, arguments);
 
-      interval = setInterval(function(){
-                    fnIntervat.call(this);
+      interval = setInterval(
+                    function(){
+                      fnIntervat.call(this);
 
-                    if (this[flagForClear]){
-                      clearInterval(interval);
-                    }
+                      if (this[flagForClear]){
+                        clearInterval(interval);
+                      }
                   }.bind(this), (timer || 200));
     }
 
     /**
-     * [applyOverlay PRIVATE  apply overlay]
+     * [applyOverlay - PRIVATE apply overlay]
      * @return {Jquery} [$ overlay element]
      */
     applyOverlay = function applyOverlay(){
@@ -217,9 +239,7 @@
           overlay.addClass("element");
       }
 
-      if (this.options.autoShow === false){
-          overlay.css({"display":"none"});
-      }
+      overlay.css({"display":"none"});
 
       this.container
           .append(overlay);
@@ -234,7 +254,6 @@
         var data;
 
         xDebug.call(this, arguments.callee.name, arguments);
-
 
         this.options.parent = $(this.options.parent);
         data = this.options.parent.data("spinKit");
@@ -277,6 +296,10 @@
           }
         }
 
+        if (!this.options.dynamicActionId) {
+            this.options.dynamicActionId = Math.floor(Math.random() * 26) + Date.now() + "";
+        }
+
         setPosition.call(this);
 
         // reg. resize event
@@ -291,12 +314,21 @@
         }.bind(this));
 
         if ($.isArray(data) === false) {
-            data = this;
+          data = this;
+        } else if($.isPlainObject(data) === true) {
+          data = [data, this];
         } else {
-            data.push(this);
+          data.push(this);
         }
 
+        // set data on parent DOM for property DAid & spinKit
+        // for easy access
         this.options.parent.data("spinKit", data);
+        this.options.parent.data(this.options.dynamicActionId, this);
+
+        if (this.options.autoShow === true) {
+            this.hideShow(true,this.options.delayHide);
+        }
     }
 
     apex.plugins.spinKit = function (opts){
@@ -306,7 +338,7 @@
         this.overlay     = null;
         this.isRendered  = false;
         this.type        = {};
-        this.$container  =  null;
+        this.container  =  null;
         this.init = function(){
 
             xDebug.call(this, arguments.callee.name, arguments);
@@ -369,49 +401,43 @@
        },
 
        /**
+        * [getDynamicActionId return spinKit DA id]
+        * @return {String} [getDynamicActionId]
+        */
+       getDynamicActionId : function (){
+          return this.options.dynamicActionId;
+       },
+
+       /**
         * [destoy PUBLIC - remove DOM elements, unregister events, remove data from DOM element]
         */
        destoy: function destoy(){
           var data = this.options.parent.data("spinKit");
-
-
 
           if (this.options.listenToApexRegEvents === true){
             this.options.parent.off("apexbeforerefresh", this.hideShow.bind(this, true ));
             this.options.parent.off("apexafterrefresh" , this.hideShow.bind(this, false));
           }
 
+          $.removeData(this.options.parent, this.options.dynamicActionId);
+
+          // remove data from DOM spinKit property
           if ($.isArray(data) === false) {
             $.removeData(this.options.parent, "spinKit");
           } else {
             $.grep(data, function(d){
                 return !d.container.is(this.container);
             }.bind(this));
+
+            // preserve other data
+            this.options.parent.data("spinKit", data);
           }
 
-          $.removeData(this.options.parent, "spinKit");
           this.container.remove();
 
           delete this;
        }
     };
-
-    /**
-     * [spinner_type constants spinner_type]
-     */
-    apex.plugins.spinKit.spinner_type = {
-      SK_ROTATING_PLANE  : "sk-rotating-plane",
-      SK_FADING_CIRCLE   : "sk-fading-circle",
-      SK_FOLDING_CUBE    : "sk-folding-cube",
-      SK_DOUBLE_BOUNCE   : "sk-double-bounce",
-      SK_WAVE            : "sk-wave",
-      SK_WANDERING_CUBES : "sk-wandering-cubes",
-      SK_SPINNER_PULSE   : "sk-spinner-pulse",
-      SK_CHASING_DOTS    : "sk-chasing-dots",
-      SK_THREE_BOUNCE    : "sk-three-bounce",
-      SK_CIRCLE          : "sk-circle",
-      SK_CUBE_GRID       : "sk-cube-grid"
-    }
 
 })(apex.jQuery, apex);
 
