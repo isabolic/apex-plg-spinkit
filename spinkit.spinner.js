@@ -189,7 +189,7 @@
     setPosition = function setPosition(){
         xDebug.call(this, arguments.callee.name, arguments);
 
-        if(this.container.is("body")){
+        if(this.options.parent.is("body")){
            this.container
                .find(".spinKit")
                .css({
@@ -235,7 +235,7 @@
 
       xDebug.call(this, arguments.callee.name, arguments);
 
-      if (this.container.is("body") === false){
+      if (this.options.parent.is("body") === false){
           overlay.addClass("element");
       }
 
