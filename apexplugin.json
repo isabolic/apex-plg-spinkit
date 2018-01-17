@@ -1,6 +1,6 @@
 {
   "name" : "spinKit spinner",
-  "version" : "1.0.0",
+  "version" : "1.0.0.1",
   "description" : "DA plugin for custom spinner",
   "keywords" : ["spinner", "apex", "oracle", "plugin"],
   "homepage" : "https://github.com/isabolic/apex-plg-spinkit",
